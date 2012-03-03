@@ -6,25 +6,11 @@ have software for OS X and will have Windows supported in 2012.  To enable
 support for other platforms, it will be useful to develop open source software
 to process their files.
 
-As no raw capture files from the Lytro camera are yet available, there is not
-much to do on that front.  In the meantime, the compressed files used for web
-display are available, and can be parsed.
+This tool supports both the large raw files that come from the Lytro camera
+and the compressed files that the desktop software produces for web display.
 
-.lfp web file format
---------------------
-
-The Lytro desktop app exports compressed representations of the light field
-captured by the Lytro camera to reduce file times and rendering requirements
-for web display.  The .lfp files are simply a set of JPEG files representing
-the unique visually interesting sections of the light field.  That is, a set in
-which each image shows a different area in focus.  It appears to do so
-dynamically, picking the minimum number of images necessary to show all
-*focusable* objects in narrow depths of field.
-
-These images are stored along with their estimated depths and a depth lookup
-table for the image.  This allows for HTML5 and Flash applications in which the
-user clicks on a region of the image, the value of that region is looked up, 
-and the depth image closest to that value is displayed.
+.lfp file format
+----------------
 
 The file itself is formatted as follows.  First, a header:
 
@@ -34,9 +20,9 @@ The file itself is formatted as follows.  First, a header:
     00 00 00 00
     
 After this are a number of sections.  The data in the first is plain text
-metadata describing the resolutions and sha1 hashes of the images and depth
-lookup table stored later in the image.  The second section contains the depth
-lookup table stored as 4 byte floats.  Each section after that is a jpg image.
+table of contents describing what the rest of the sections in the file
+contain.  The remaining sections can be additional metadata, a depth lookup
+table, compressed jpg images, or raw sensor data depending on the file.
 The sections are formatted as follows:
     
     # magic 12 byte header (containing a type like LFM or LFC)
@@ -51,7 +37,30 @@ The sections are formatted as follows:
     7B 22 70 69 ...
     # 0 or more bytes of null padding
     00 00 00 00 ...
-    
+
+.lfp web files
+--------------
+
+The Lytro desktop app exports compressed representations of the light field
+captured by the Lytro camera to reduce file times and rendering requirements
+for web display.  The .lfp files are simply a set of JPEG files representing
+the unique visually interesting sections of the light field.  That is, a set in
+which each image shows a different area in focus.  It appears to do so
+dynamically, picking the minimum number of images necessary to show all
+*focusable* objects in narrow depths of field.
+
+These images are stored along with their estimated depths and a depth lookup
+table for the image.  This allows for HTML5 and Flash applications in which the
+user clicks on a region of the image, the value of that region is looked up,
+and the depth image closest to that value is displayed.
+
+.lfp raw files
+--------------
+The files that come directly from the camera are roughly 16MB, made primarily
+of one section which is a raw Bayer array of the 3280 x 3280 pixel sensor.
+There are also two metadata files, one containing detailed information about
+the format of the captured image, and the other containing serial numbers.
+
 lfpsplitter
 -----------
 
@@ -63,14 +72,17 @@ the component jpgs.
         gcc -O3 -Wall    -c -o lfpsplitter.o lfpsplitter.c
         gcc -o lfpsplitter lfpsplitter.o  -O3 -Wall 
 
-    ./lfpsplitter ./butterfly.lfp 
-        Saved ./butterfly_metadata.txt
-        Saved ./butterfly_depth.txt
-        Saved ./butterfly_0.jpg
-        Saved ./butterfly_1.jpg
-        Saved ./butterfly_2.jpg
-        Saved ./butterfly_3.jpg
-        Saved ./butterfly_4.jpg
-        Saved ./butterfly_5.jpg
-        Saved ./butterfly_6.jpg
+    ./lfpsplitter IMG_0001.lfp
+        Saved IMG_0001_table.txt
+        Saved IMG_0001_imageRef0.raw
+        Saved IMG_0001_metadataRef.txt
+        Saved IMG_0001_privateMetadataRef.txt
+
+    ./lfpsplitter IMG_0001-stk.lfp
+        Saved IMG_0001-stk_table.txt
+        Saved IMG_0001-stk_depth.txt
+        Saved IMG_0001-stk_0.jpg
+        Saved IMG_0001-stk_1.jpg
+        Saved IMG_0001-stk_2.jpg
+        Saved IMG_0001-stk_3.jpg
 
