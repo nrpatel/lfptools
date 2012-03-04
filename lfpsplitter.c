@@ -136,6 +136,28 @@ static char *depth_string(const char *data, int *datalen, int len)
     return start;
 }
 
+static char *converted_image(const unsigned char *data, int *datalen, int len)
+{
+    int filelen = 4*len/3;
+    const unsigned char *ptr = data;
+    unsigned short *image = malloc(filelen*sizeof(short));
+    unsigned short *start = image;
+    
+    if (!image) return NULL;
+    // Turn the 12 bits per pixel packed array into 16 bits per pixel
+    // to make it easier to import into other libraries
+    while (ptr < data+len) {
+        *image++ = (*ptr << 8) | (*(ptr+1) & 0xF0);
+        *image++ = ((*(ptr+1) & 0x0F) << 12) | (*(ptr+2) << 4);
+        
+        ptr += 3;
+    }
+    
+    *datalen = filelen;
+    
+    return (char *)start;
+}
+
 static int save_data(const char *data, int len, const char *filename)
 {
     FILE *fp;
@@ -225,9 +247,9 @@ static void lfp_save_sections(lfp_file_p lfp)
 {
     char name[STRING_LENGTH];
     lfp_section_p section = lfp->sections;
-    int jpeg = 0, raw = 0;
-    char *depth;
-    int depthlen = 0;
+    int jpeg = 0, raw = 0, text = 0;
+    char *buf;
+    int buflen = 0;
     
     // Save the plaintext metadata
     snprintf(name, STRING_LENGTH, "%s_%s.txt", lfp->filename, lfp->table->name);
@@ -237,24 +259,29 @@ static void lfp_save_sections(lfp_file_p lfp)
     while (section != NULL) {
         switch (section->type) {
             case LFP_RAW_IMAGE:
-                snprintf(name, STRING_LENGTH, "%s_%s%d.raw", lfp->filename, section->name, raw++);
-                if (save_data(section->data, section->len, name))
-                    printf("Saved %s\n", name);
+                buf = converted_image((unsigned char *)section->data, &buflen, section->len);
+                if (buf) {
+                    snprintf(name, STRING_LENGTH, "%s_%s%d.raw", lfp->filename, section->name, raw++);
+                    if (save_data(buf, buflen, name))
+                        printf("Saved %s\n", name);
+                    free(buf);
+                }
                 break;
             
             case LFP_TEXT:
-                snprintf(name, STRING_LENGTH, "%s_%s.txt", lfp->filename, section->name);
+                snprintf(name, STRING_LENGTH, "%s_%s%d.txt", lfp->filename, section->name, text++);
                 if (save_data(section->data, section->len, name))
                     printf("Saved %s\n", name);
                 break;
                 
             case LFP_DEPTH_LUT:
                 // Parse the depth lookup table and save as plaintext
-                depth = depth_string(section->data, &depthlen, section->len);
-                snprintf(name, STRING_LENGTH, "%s_%s.txt", lfp->filename, section->name);
-                if (depth) {
-                    if (save_data(depth, depthlen, name))
+                buf = depth_string(section->data, &buflen, section->len);
+                if (buf) {
+                    snprintf(name, STRING_LENGTH, "%s_%s.txt", lfp->filename, section->name);
+                    if (save_data(buf, buflen, name))
                         printf("Saved %s\n", name);
+                    free(buf);
                 }
                 break;
                 
