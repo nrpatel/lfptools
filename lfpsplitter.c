@@ -286,7 +286,7 @@ static void lfp_save_sections(lfp_file_p lfp)
                 break;
                 
             case LFP_JPEG:
-                snprintf(name, STRING_LENGTH, "%s_%d.jpg", lfp->filename, jpeg++);
+                snprintf(name, STRING_LENGTH, "%s_%.2d.jpg", lfp->filename, jpeg++);
                 if (save_data(section->data, section->len, name))
                     printf("Saved %s\n", name);
                 break;
