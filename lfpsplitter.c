@@ -37,7 +37,7 @@ static lfp_file_p lfp_create(const char *filename)
         return NULL;
     }
     
-    if (!(fp = fopen(filename, "r"))) {
+    if (!(fp = fopen(filename, "rb"))) {
         return NULL;
     }
     
