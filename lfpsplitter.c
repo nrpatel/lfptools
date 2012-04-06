@@ -19,7 +19,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+#include <winsock.h>
+typedef unsigned int uint32_t;
+#else
 #include <arpa/inet.h>
+#endif
 #include "lfpsplitter.h"
 
 #define SHA1_LENGTH 45
