@@ -19,13 +19,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+#include <winsock.h>
+typedef unsigned int uint32_t;
+#else
 #include <arpa/inet.h>
+#endif
 #include "lfpsplitter.h"
 
 #define SHA1_LENGTH 45
 #define MAGIC_LENGTH 12
 #define BLANK_LENGTH 35
 #define STRING_LENGTH 256
+
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#endif
 
 // TODO: read directly from the file instead of copying to a string
 //       since camera backup files can be in the hundreds of megabytes
@@ -37,14 +46,14 @@ static lfp_file_p lfp_create(const char *filename)
         return NULL;
     }
     
-    if (!(fp = fopen(filename, "r"))) {
+    if (!(fp = fopen(filename, "rb"))) {
         return NULL;
     }
     
     fseek(fp, 0, SEEK_END);
     lfp->len = ftell(fp);
     fseek(fp, 0, SEEK_SET);
-    lfp->data = malloc(lfp->len);
+    lfp->data = (char*)malloc(lfp->len);
     
     lfp->len = fread(lfp->data, 1, lfp->len, fp);
     fclose(fp);
@@ -115,7 +124,7 @@ static char *depth_string(const char *data, int *datalen, int len)
 {
     // make sure there is enough space for the ascii formatted floats
     int filelen = 20*len/4;
-    char *depth = malloc(filelen);
+    char *depth = (char*)malloc(filelen);
     char *start = depth;
     int i = 0;
     
@@ -140,7 +149,7 @@ static char *converted_image(const unsigned char *data, int *datalen, int len)
 {
     int filelen = 4*len/3;
     const unsigned char *ptr = data;
-    unsigned short *image = malloc(filelen*sizeof(short));
+    unsigned short *image = (unsigned short*)malloc(filelen*sizeof(short));
     unsigned short *start = image;
     
     if (!image) return NULL;
@@ -183,7 +192,7 @@ static void lfp_identify_section(lfp_file_p lfp, lfp_section_p section)
     char jpeg[10] = {0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46};
     char *ptr = NULL;
     int quotecount = 0;
-    section->name = malloc(STRING_LENGTH);
+    section->name = (char*)malloc(STRING_LENGTH);
 
     // Find the sha1 in the table of contents
     if ((ptr = strstr(lfp->table->data, section->sha1))) {
