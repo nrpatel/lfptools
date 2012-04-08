@@ -86,3 +86,8 @@ the component jpgs.
         Saved IMG_0001-stk_2.jpg
         Saved IMG_0001-stk_3.jpg
 
+
+On Windows + MinGW gcc compiler, you need to compile lfpsplitter with,
+
+    gcc.exe -o lfpspilitter.exe -O3 -Wall lfpsplitter.c -lwsock32
+
