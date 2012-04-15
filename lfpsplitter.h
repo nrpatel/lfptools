@@ -3,7 +3,7 @@
 
 typedef enum {
     LFP_RAW_IMAGE,
-    LFP_TEXT,
+    LFP_JSON,
     LFP_DEPTH_LUT,
     LFP_JPEG
 } section_type;

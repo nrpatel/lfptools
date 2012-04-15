@@ -20,7 +20,7 @@ The file itself is formatted as follows.  First, a header:
     00 00 00 00
     
 After this are a number of sections.  The data in the first is plain text
-table of contents describing what the rest of the sections in the file
+JSON table of contents describing what the rest of the sections in the file
 contain.  The remaining sections can be additional metadata, a depth lookup
 table, compressed jpg images, or raw sensor data depending on the file.
 The sections are formatted as follows:
@@ -73,21 +73,16 @@ the component jpgs.
         gcc -o lfpsplitter lfpsplitter.o  -O3 -Wall 
 
     ./lfpsplitter IMG_0001.lfp
-        Saved IMG_0001_table.txt
+        Saved IMG_0001_table.json
         Saved IMG_0001_imageRef0.raw
-        Saved IMG_0001_metadataRef.txt
-        Saved IMG_0001_privateMetadataRef.txt
+        Saved IMG_0001_metadataRef.json
+        Saved IMG_0001_privateMetadataRef.json
 
     ./lfpsplitter IMG_0001-stk.lfp
-        Saved IMG_0001-stk_table.txt
+        Saved IMG_0001-stk_table.json
         Saved IMG_0001-stk_depth.txt
         Saved IMG_0001-stk_0.jpg
         Saved IMG_0001-stk_1.jpg
         Saved IMG_0001-stk_2.jpg
         Saved IMG_0001-stk_3.jpg
-
-
-On Windows + MinGW gcc compiler, you need to compile lfpsplitter with,
-
-    gcc.exe -o lfpspilitter.exe -O3 -Wall lfpsplitter.c -lwsock32
 
