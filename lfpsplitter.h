@@ -5,7 +5,9 @@ typedef enum {
     LFP_RAW_IMAGE,
     LFP_JSON,
     LFP_DEPTH_LUT,
-    LFP_JPEG
+    LFP_LUT,
+    LFP_JPEG,
+    LFP_BLOCK_OF_IMAGES
 } section_type;
 
 typedef struct lfp_section {

@@ -14,6 +14,9 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ * Modifications for Lytro Version 2 files made on 1/13/2013 by
+ * Elissa Weidaw.
  */
 
 #include <stdio.h>
@@ -31,6 +34,8 @@ typedef unsigned int uint32_t;
 #define MAGIC_LENGTH 12
 #define BLANK_LENGTH 35
 #define STRING_LENGTH 256
+#define LUT_DIM_V1 20
+#define LUT_DIM_V2 330
 
 #ifdef _MSC_VER
 #define snprintf _snprintf
@@ -205,10 +210,17 @@ static void lfp_identify_section(lfp_file_p lfp, lfp_section_p section)
             strcpy(section->name, "unknown");
     }
     
-    // Hard coded to assume that the 20x20 LUT is 1600 bytes
-    if (section->len == 1600) {
+    // Test for Lytro Version 1 depth map
+    if (section->len == LUT_DIM_V1 * LUT_DIM_V1 * 4) {
         section->type = LFP_DEPTH_LUT;
         strcpy(section->name, "depth");
+        return;
+    }
+    
+    // Test for Lytro Version 2 LUT (depth or confidence) map
+    if (section->len == LUT_DIM_V2 * LUT_DIM_V2 * 4) {
+        section->type = LFP_LUT;
+        strcpy(section->name, "lut");
         return;
     }
     
@@ -219,8 +231,14 @@ static void lfp_identify_section(lfp_file_p lfp, lfp_section_p section)
         strcpy(section->name, "image");
         return;
     }
+
+    // Check for h264 block
+    if (strcmp(section->name, "blockOfImagesRef") == 0) {
+        section->type = LFP_BLOCK_OF_IMAGES;
+        return;
+    }
     
-    // Assume anything that isn't called imageRef is plain text json
+    // Assume anything else that isn't called imageRef is plain text json
     if (strcmp(section->name, "imageRef"))
         section->type = LFP_JSON;
 }
@@ -256,7 +274,7 @@ static void lfp_save_sections(lfp_file_p lfp)
 {
     char name[STRING_LENGTH];
     lfp_section_p section = lfp->sections;
-    int jpeg = 0, raw = 0, text = 0;
+    int jpeg = 0, raw = 0, text = 0, image_block = 0, lut = 0;
     char *buf;
     int buflen = 0;
     
@@ -293,9 +311,33 @@ static void lfp_save_sections(lfp_file_p lfp)
                     free(buf);
                 }
                 break;
+
+            // Lytro Version 2 LUT - depth or confidence map
+            case LFP_LUT:
+                // Parse the LUT and save as plaintext
+                buf = depth_string(section->data, &buflen, section->len);
+                if (buf) {
+                    if (lut++ == 0) {
+                        snprintf(name, STRING_LENGTH, "%s_%s_depth.txt", lfp->filename, section->name);
+                    } else {
+                        snprintf(name, STRING_LENGTH, "%s_%s_confidence.txt", lfp->filename, section->name);
+                    }
+                    if (save_data(buf, buflen, name)){
+                        printf("Saved %s\n", name);
+                    }
+                    free(buf);
+                }
+                break;
                 
             case LFP_JPEG:
                 snprintf(name, STRING_LENGTH, "%s_%.2d.jpg", lfp->filename, jpeg++);
+                if (save_data(section->data, section->len, name))
+                    printf("Saved %s\n", name);
+                break;
+
+            // Lytro Version 2 H264 block
+            case LFP_BLOCK_OF_IMAGES:
+                snprintf(name, STRING_LENGTH, "%s_%s_%.2d.h264", lfp->filename, section->name, image_block++);
                 if (save_data(section->data, section->len, name))
                     printf("Saved %s\n", name);
                 break;
