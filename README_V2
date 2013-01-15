@@ -1,17 +1,10 @@
-Date: January 13, 2013
-Author: Elissa Weidaw
-
-The accompanying code contains modifications to Nirav Patel's 
-original lfpsplitter utility in an attempt to accommodate the
-Lytro file format changes after the Lytro processing software
-update that added shift perspective viewing and living filters.
-(This Lytro update became available in December 2012.)
-
-The syntax of the lfpsplitter command as described in the 
-original README file has not changed. 
+In December 2012 Lytro released a software upgrade that supports
+perspective shift viewing and "living filters". This entailed a
+change to the contents of .lfp files as described below.
+================================================================
 
 The Lytro Version 2 software generates three .lfp files instead of two
-as in Version 1. These files are
+as in Version 1. These files are:
 
   1. IMG_nnnn.lfp 
 
@@ -40,18 +33,18 @@ as in Version 1. These files are
 An example of running the new lfpsplitter on Lytro files generated
 with Lytro's version 2 software is shown below. 
 
-$ lfpsplitter IMG_0008.lfp
+$ ./lfpsplitter IMG_0008.lfp
 Saved IMG_0008_table.json
 Saved IMG_0008_imageRef0.raw
 Saved IMG_0008_metadataRef0.json
 Saved IMG_0008_privateMetadataRef1.json
 
-$ lfpsplitter IMG_0008-dm.lfp
+$ ./lfpsplitter IMG_0008-dm.lfp
 Saved IMG_0008-dm_table.json
 Saved IMG_0008-dm_lut_depth.txt
 Saved IMG_0008-dm_lut_confidence.txt
 
-$ lfpsplitter IMG_0008-stk.lfp 
+$ ./lfpsplitter IMG_0008-stk.lfp 
 Saved IMG_0008-stk_table.json
 Saved IMG_0008-stk_blockOfImagesRef_00.h264
 Saved IMG_0008-stk_lut_depth.txt
