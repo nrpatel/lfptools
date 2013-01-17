@@ -9,6 +9,10 @@ to process their files.
 This tool supports both the large raw files that come from the Lytro camera
 and the compressed files that the desktop software produces for web display.
 
+Note: The description below refers to .lfp file format for files generated
+using Lytro's Version 1 processing software. See README_V2 for a description
+of .lfp format changes as of Lytro's December 2012 update (Version 2).
+
 .lfp file format
 ----------------
 
