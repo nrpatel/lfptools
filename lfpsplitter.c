@@ -37,9 +37,18 @@
 #define snprintf _snprintf
 #endif
 
-uint32_t uint32_to_little_endian(uint32_t dword)
+int is_little_endian()
 {
     //This implementation was found in http://stackoverflow.com/a/14791372/1577940
+    uint32_t one = 0x00000001;
+    uint8_t is_little_endian = *(uint8_t *)&one;
+    return is_little_endian;
+}
+
+uint32_t uint32_from_big_endian(uint32_t dword)
+{
+    //This implementation was found in http://stackoverflow.com/a/14791372/1577940
+    if (!is_little_endian()) return dword;
 
     //Picking all bytes and putting them in reverse order
     return (((dword >>  0) & 0xff) << 24)
@@ -105,7 +114,7 @@ static lfp_section_p parse_section(char **lfp, int *in_len)
     len -= MAGIC_LENGTH;
 
     // the length is stored as a big endian unsigned 32 bit int
-    section->len = uint32_to_little_endian(*(uint32_t *)ptr);
+    section->len = uint32_from_big_endian(*(uint32_t *)ptr);
     ptr += sizeof(uint32_t);
     len -= sizeof(uint32_t);
 
